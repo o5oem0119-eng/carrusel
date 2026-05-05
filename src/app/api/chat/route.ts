@@ -5,7 +5,7 @@ import { getBrand } from "@/lib/brand";
 import { getCarousel } from "@/lib/carousels";
 import { getPreset } from "@/lib/style-presets";
 import { loadHistory, saveHistory } from "@/lib/session-history";
-import { splitSlideData } from "@/lib/split-slide-data";
+import { splitSlideData, guardSlideCount } from "@/lib/split-slide-data";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -139,8 +139,14 @@ async function executeTool(
         const slides = args.slides as any[];
         const results: string[] = [];
         
-        // 모든 슬라이드를 먼저 분할 처리
-        const processedSlides = slides.flatMap(s => splitSlideData(s));
+        // 1. 현재 슬라이드 수 조회
+        const carouselRes = await fetch(`${base}/api/carousels/${carouselId}`);
+        const carousel = await carouselRes.json();
+        const existingCount = carousel.slides?.length || 0;
+
+        // 2. 분할 처리 및 상한 체크
+        const splitSlides = slides.flatMap(s => splitSlideData(s));
+        const { slides: processedSlides, warning } = guardSlideCount(splitSlides, existingCount);
 
         for (const slideData of processedSlides) {
           const res = await fetch(
@@ -158,7 +164,10 @@ async function executeTool(
             results.push(data.id);
           }
         }
-        return JSON.stringify({ created: results });
+        return JSON.stringify({ 
+          created: results,
+          warning: warning || undefined
+        });
       }
 
       case "get_slide_html": {
