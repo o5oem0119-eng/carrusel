@@ -4,9 +4,12 @@ import { useMemo, useRef, useEffect, useState, useCallback } from "react";
 import { wrapSlideHtml } from "@/lib/slide-html";
 import type { AspectRatio } from "@/types/carousel";
 import { DIMENSIONS } from "@/types/carousel";
+import { renderSlideDataToHtml } from "@/lib/slide-renderer";
+import type { SlideData } from "@/types/slide-data";
 
 interface SlideRendererProps {
   html: string;
+  slideData?: SlideData;
   aspectRatio: AspectRatio;
   className?: string;
   style?: React.CSSProperties;
@@ -14,6 +17,7 @@ interface SlideRendererProps {
 
 export function SlideRenderer({
   html,
+  slideData,
   aspectRatio,
   className,
   style,
@@ -22,10 +26,15 @@ export function SlideRenderer({
   const [dims, setDims] = useState<{ w: number; h: number } | null>(null);
   const { width: slideW, height: slideH } = DIMENSIONS[aspectRatio];
 
-  const srcDoc = useMemo(
-    () => wrapSlideHtml(html, aspectRatio),
-    [html, aspectRatio]
-  );
+  const srcDoc = useMemo(() => {
+    // 1. slideData(JSON)가 있으면 우선적으로 템플릿 렌더링
+    if (slideData) {
+      const generatedHtml = renderSlideDataToHtml(slideData);
+      return wrapSlideHtml(generatedHtml, aspectRatio);
+    }
+    // 2. 없으면 기존 html(string) 필드 사용 (하위 호환)
+    return wrapSlideHtml(html, aspectRatio);
+  }, [html, slideData, aspectRatio]);
 
   const measure = useCallback(() => {
     const el = outerRef.current;

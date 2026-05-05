@@ -13,9 +13,9 @@ import { SlideFilmstrip } from "@/components/editor/SlideFilmstrip";
 import { AspectRatioSelector } from "@/components/editor/AspectRatioSelector";
 import { ExportButton } from "@/components/editor/ExportButton";
 import { CaptionPanel } from "@/components/editor/CaptionPanel";
-import { SafeZoneOverlay } from "@/components/editor/SafeZoneOverlay";
 import { FullscreenPreview } from "@/components/editor/FullscreenPreview";
-import type { Carousel, AspectRatio } from "@/types/carousel";
+import { SlideEditPanel } from "@/components/editor/SlideEditPanel";
+import type { Carousel, AspectRatio, Slide } from "@/types/carousel";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -163,6 +163,22 @@ export default function CarouselEditorPage({ params }: PageProps) {
     },
     [id, fetchCarousel]
   );
+  
+  const handleUpdateSlide = async (updates: Partial<Slide>) => {
+    if (!carousel) return;
+    const slideId = carousel.slides[activeSlide]?.id;
+    if (!slideId) return;
+
+    const res = await fetch(`/api/carousels/${id}/slides/${slideId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updates),
+    });
+
+    if (res.ok) {
+      await fetchCarousel();
+    }
+  };
 
   const handleAddSlideRequest = useCallback(() => {
     setChatOpen(true);
@@ -325,11 +341,25 @@ export default function CarouselEditorPage({ params }: PageProps) {
             showSafeZones={showSafeZones}
           />
 
-          {/* Caption panel */}
+          {/* Preview Dots & Caption */}
           <CaptionPanel
             caption={carousel.caption}
             hashtags={carousel.hashtags}
           />
+        </div>
+
+        {/* Slide Edit Panel (Right) */}
+        <div className="w-[360px] border-l border-border shrink-0 flex flex-col bg-surface shadow-sm z-10">
+          {carousel.slides[activeSlide] ? (
+            <SlideEditPanel 
+              slide={carousel.slides[activeSlide]} 
+              onSave={handleUpdateSlide}
+            />
+          ) : (
+            <div className="h-full flex items-center justify-center p-8 text-center text-muted-foreground bg-muted/20">
+              <p className="text-xs">Select a slide to edit</p>
+            </div>
+          )}
         </div>
       </div>
 

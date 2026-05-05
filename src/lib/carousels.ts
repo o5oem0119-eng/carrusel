@@ -97,7 +97,8 @@ export async function deleteCarousel(id: string): Promise<boolean> {
 export async function addSlide(
   carouselId: string,
   html: string,
-  notes = ""
+  notes = "",
+  slideData?: any // 타입 순환 참조 방지를 위해 any 사용 또는 임포트
 ): Promise<Slide | null> {
   const data = await load();
   const carousel = data.carousels.find((c) => c.id === carouselId);
@@ -110,6 +111,7 @@ export async function addSlide(
     previousVersions: [],
     order: carousel.slides.length,
     notes,
+    slideData,
   };
   carousel.slides.push(slide);
   carousel.updatedAt = now();
@@ -120,7 +122,7 @@ export async function addSlide(
 export async function updateSlide(
   carouselId: string,
   slideId: string,
-  updates: Partial<Pick<Slide, "html" | "notes">>
+  updates: Partial<Pick<Slide, "html" | "notes" | "slideData">>
 ): Promise<Slide | null> {
   const data = await load();
   const carousel = data.carousels.find((c) => c.id === carouselId);

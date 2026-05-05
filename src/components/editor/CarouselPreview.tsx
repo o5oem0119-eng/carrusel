@@ -69,6 +69,7 @@ export function CarouselPreview({
         >
           <SlideRenderer
             html={slide.html}
+            slideData={slide.slideData}
             aspectRatio={aspectRatio}
             style={{ width: "100%", height: "100%" }}
           />

@@ -4,6 +4,7 @@ import path from "path";
 import sharp from "sharp";
 import { wrapSlideHtml, extractFontFamilies } from "./slide-html";
 import { getInlinedFontCSS } from "./fonts";
+import { renderSlideDataToHtml } from "./slide-renderer";
 import type { Slide, AspectRatio } from "@/types/carousel";
 import { DIMENSIONS } from "@/types/carousel";
 
@@ -69,12 +70,15 @@ export async function exportSlide(
 ): Promise<Buffer> {
   const { width, height } = DIMENSIONS[aspectRatio];
 
+  // slideData가 있으면 HTML로 먼저 변환, 없으면 기존 html 필드 사용
+  const sourceHtml = slide.slideData ? renderSlideDataToHtml(slide.slideData) : slide.html;
+
   // Get inlined font CSS
-  const fontFamilies = extractFontFamilies(slide.html);
+  const fontFamilies = extractFontFamilies(sourceHtml);
   const inlinedFontCss = await getInlinedFontCSS(fontFamilies);
 
   // Inline images
-  const inlinedHtml = await inlineImages(slide.html);
+  const inlinedHtml = await inlineImages(sourceHtml);
 
   // Build self-contained HTML
   const fullHtml = wrapSlideHtml(inlinedHtml, aspectRatio, {

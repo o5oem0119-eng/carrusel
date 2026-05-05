@@ -1,3 +1,4 @@
+import type { SlideData } from "./slide-data";
 export type AspectRatio = "1:1" | "4:5" | "9:16";
 
 export interface Slide {
@@ -6,6 +7,7 @@ export interface Slide {
   previousVersions: string[];
   order: number;
   notes: string;
+  slideData?: SlideData; // 신규 에디터용 JSON 데이터
 }
 
 export interface ReferenceImage {

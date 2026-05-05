@@ -8,16 +8,21 @@ export async function POST(
   const { id } = await params;
   try {
     const body = await request.json();
-    const { html, notes } = body as { html?: string; notes?: string };
+    const { html, notes, slideData } = body as { 
+      html?: string; 
+      notes?: string; 
+      slideData?: any 
+    };
 
-    if (!html || typeof html !== "string") {
+    // 하위 호환성: HTML이 있거나, 새로운 방식인 slideData가 있어야 함
+    if ((!html || typeof html !== "string") && !slideData) {
       return NextResponse.json(
-        { error: "HTML content is required" },
+        { error: "HTML content or slideData is required" },
         { status: 400 }
       );
     }
 
-    const slide = await addSlide(id, html, notes);
+    const slide = await addSlide(id, html || "", notes, slideData);
     if (!slide) {
       return NextResponse.json(
         { error: "Carousel not found or max slides reached" },

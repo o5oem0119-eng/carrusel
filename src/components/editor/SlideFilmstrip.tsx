@@ -98,6 +98,7 @@ function SortableSlideThumb({
       >
         <SlideRenderer
           html={slide.html}
+          slideData={slide.slideData}
           aspectRatio={aspectRatio}
           className="w-full h-full"
         />
